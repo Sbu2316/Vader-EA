@@ -1,0 +1,12 @@
+{
+  "name": "vader-ea-server",
+  "version": "1.0.0",
+  "description": "Vader EA CRT trading backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
