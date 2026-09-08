@@ -1,16 +1,15 @@
-//+------------------------------------------------------------------+
+   //+------------------------------------------------------------------+
 //|                                                   VaderEA.mq5    |
-//|                     Vader EA - CRT Trading System                |
+//|                 VADER EA - Candle Range Theory                   |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.00"
-#property description "Vader EA - CRT Trading System"
+#property version "1.10"
 
 #include <Trade/Trade.mqh>
 
 CTrade trade;
 
-//--- Trading settings
+//--- General settings
 input double LotSize = 0.01;
 input int MagicNumber = 777001;
 
@@ -18,18 +17,15 @@ input int MagicNumber = 777001;
 input ENUM_TIMEFRAMES CRT_Timeframe = PERIOD_M15;
 input ENUM_TIMEFRAMES Entry_Timeframe = PERIOD_M5;
 
-//--- Trading symbols
-input string Symbol1 = "XAUUSD";
-input string Symbol2 = "NAS100";
-input string Symbol3 = "US30";
-input string Symbol4 = "BTCUSD";
+//--- Signal settings
+input bool RequireCloseInsideRange = true;
 
-//--- CRT variables
+//--- CRT range
 double CRT_High = 0.0;
 double CRT_Low  = 0.0;
 
-bool BullishSetup = false;
-bool BearishSetup = false;
+//--- Prevent repeated signals
+datetime LastSignalTime = 0;
 
 //+------------------------------------------------------------------+
 //| Expert initialization                                            |
@@ -38,30 +34,32 @@ int OnInit()
 {
    trade.SetExpertMagicNumber(MagicNumber);
 
-   Print("================================");
-   Print("VADER EA INITIALIZED");
-   Print("CRT Trading System");
-   Print("Lot Size: ", LotSize);
-   Print("================================");
+   Print("=================================");
+   Print("VADER EA v1.10");
+   Print("CRT SIGNAL ENGINE");
+   Print("Trading is currently DISABLED");
+   Print("=================================");
 
    return(INIT_SUCCEEDED);
 }
 
 //+------------------------------------------------------------------+
-//| Expert tick function                                             |
+//| Expert tick                                                      |
 //+------------------------------------------------------------------+
 void OnTick()
 {
-   UpdateCRT();
+   UpdateCRTRange();
 
    CheckBullishCRT();
    CheckBearishCRT();
+
+   DrawCRTLevels();
 }
 
 //+------------------------------------------------------------------+
-//| Update CRT range                                                 |
+//| Get the latest completed M15 candle                               |
 //+------------------------------------------------------------------+
-void UpdateCRT()
+void UpdateCRTRange()
 {
    MqlRates rates[];
 
@@ -75,7 +73,7 @@ void UpdateCRT()
 }
 
 //+------------------------------------------------------------------+
-//| Check bullish CRT                                                |
+//| Bullish CRT                                                      |
 //+------------------------------------------------------------------+
 void CheckBullishCRT()
 {
@@ -86,21 +84,34 @@ void CheckBullishCRT()
    if(CopyRates(_Symbol, Entry_Timeframe, 1, 2, rates) != 2)
       return;
 
-   double previousLow = rates[1].low;
-   double closedPrice = rates[0].close;
+   double sweepLow = rates[1].low;
+   double closePrice = rates[0].close;
 
-   // Price sweeps CRT low and closes back inside the range
-   if(previousLow < CRT_Low && closedPrice > CRT_Low)
+   bool sweptLow = sweepLow < CRT_Low;
+   bool reclaimed = closePrice > CRT_Low;
+
+   if(sweptLow && reclaimed)
    {
-      BullishSetup = true;
-      BearishSetup = false;
+      datetime signalTime = rates[0].time;
 
-      Print("VADER EA: BULLISH CRT SIGNAL");
+      if(signalTime != LastSignalTime)
+      {
+         LastSignalTime = signalTime;
+
+         Print("=================================");
+         Print("VADER EA - BULLISH CRT");
+         Print("CRT High: ", DoubleToString(CRT_High, _Digits));
+         Print("CRT Low : ", DoubleToString(CRT_Low, _Digits));
+         Print("Sweep   : ", DoubleToString(sweepLow, _Digits));
+         Print("Close   : ", DoubleToString(closePrice, _Digits));
+         Print("ACTION  : BUY SIGNAL");
+         Print("=================================");
+      }
    }
 }
 
 //+------------------------------------------------------------------+
-//| Check bearish CRT                                                |
+//| Bearish CRT                                                      |
 //+------------------------------------------------------------------+
 void CheckBearishCRT()
 {
@@ -111,16 +122,56 @@ void CheckBearishCRT()
    if(CopyRates(_Symbol, Entry_Timeframe, 1, 2, rates) != 2)
       return;
 
-   double previousHigh = rates[1].high;
-   double closedPrice  = rates[0].close;
+   double sweepHigh = rates[1].high;
+   double closePrice = rates[0].close;
 
-   // Price sweeps CRT high and closes back inside the range
-   if(previousHigh > CRT_High && closedPrice < CRT_High)
+   bool sweptHigh = sweepHigh > CRT_High;
+   bool rejected = closePrice < CRT_High;
+
+   if(sweptHigh && rejected)
    {
-      BearishSetup = true;
-      BullishSetup = false;
+      datetime signalTime = rates[0].time;
 
-      Print("VADER EA: BEARISH CRT SIGNAL");
+      if(signalTime != LastSignalTime)
+      {
+         LastSignalTime = signalTime;
+
+         Print("=================================");
+         Print("VADER EA - BEARISH CRT");
+         Print("CRT High: ", DoubleToString(CRT_High, _Digits));
+         Print("CRT Low : ", DoubleToString(CRT_Low, _Digits));
+         Print("Sweep   : ", DoubleToString(sweepHigh, _Digits));
+         Print("Close   : ", DoubleToString(closePrice, _Digits));
+         Print("ACTION  : SELL SIGNAL");
+         Print("=================================");
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Draw CRT high and low                                            |
+//+------------------------------------------------------------------+
+void DrawCRTLevels()
+{
+   string highName = "VADER_CRT_HIGH";
+   string lowName  = "VADER_CRT_LOW";
+
+   if(ObjectFind(0, highName) < 0)
+   {
+      ObjectCreate(0, highName, OBJ_HLINE, 0, 0, CRT_High);
+   }
+   else
+   {
+      ObjectSetDouble(0, highName, OBJPROP_PRICE, CRT_High);
+   }
+
+   if(ObjectFind(0, lowName) < 0)
+   {
+      ObjectCreate(0, lowName, OBJ_HLINE, 0, 0, CRT_Low);
+   }
+   else
+   {
+      ObjectSetDouble(0, lowName, OBJPROP_PRICE, CRT_Low);
    }
 }
 
