@@ -1,150 +1,57 @@
-<?xml version="1.0" encoding="utf-8"?>
+package com.vaderea.trading;
 
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#080808">
+import android.app.Activity;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+public class MainActivity extends Activity {
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="VADER EA"
-            android:textColor="#FFFFFF"
-            android:textSize="32sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:padding="10dp" />
+    private TextView statusText;
+    private TextView crtHigh;
+    private TextView crtLow;
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="CRT TRADING SYSTEM"
-            android:textColor="#AAAAAA"
-            android:textSize="15sp"
-            android:gravity="center"
-            android:paddingBottom="20dp" />
+    private Button startButton;
+    private Button stopButton;
 
-        <TextView
-            android:id="@+id/statusText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="BOT: OFFLINE"
-            android:textColor="#FFFFFF"
-            android:textSize="21sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:padding="18dp" />
+    private EditText lotSize;
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="MARKETS"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:paddingTop="15dp"
-            android:paddingBottom="10dp" />
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        <TextView
-            android:id="@+id/xauusdStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="XAUUSD    WAITING"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp"
-            android:padding="12dp" />
+        statusText = findViewById(R.id.statusText);
+        crtHigh = findViewById(R.id.crtHigh);
+        crtLow = findViewById(R.id.crtLow);
 
-        <TextView
-            android:id="@+id/nas100Status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="NAS100    WAITING"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp"
-            android:padding="12dp" />
+        startButton = findViewById(R.id.startButton);
+        stopButton = findViewById(R.id.stopButton);
 
-        <TextView
-            android:id="@+id/us30Status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="US30      WAITING"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp"
-            android:padding="12dp" />
+        lotSize = findViewById(R.id.lotSize);
 
-        <TextView
-            android:id="@+id/btcusdStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="BTCUSD    WAITING"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp"
-            android:padding="12dp" />
+        startButton.setOnClickListener(v -> {
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="CRT RANGE"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:paddingTop="20dp" />
+            String lots = lotSize.getText().toString();
 
-        <TextView
-            android:id="@+id/crtHigh"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="CRT HIGH: --"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp"
-            android:padding="10dp" />
+            if (lots.isEmpty()) {
+                lots = "0.01";
+            }
 
-        <TextView
-            android:id="@+id/crtLow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="CRT LOW: --"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp"
-            android:padding="10dp" />
+            statusText.setText("BOT: RUNNING");
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="LOT SIZE"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:paddingTop="20dp" />
+            // Demo display values for now.
+            crtHigh.setText("CRT HIGH: WAITING");
+            crtLow.setText("CRT LOW: WAITING");
+        });
 
-        <EditText
-            android:id="@+id/lotSize"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
-            android:text="0.01"
-            android:textColor="#FFFFFF" />
+        stopButton.setOnClickListener(v -> {
 
-        <Button
-            android:id="@+id/startButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="START VADER EA"
-            android:layout_marginTop="25dp" />
+            statusText.setText("BOT: STOPPED");
 
-        <Button
-            android:id="@+id/stopButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="STOP VADER EA"
-            android:layout_marginTop="10dp" />
-
-    </LinearLayout>
-
-</ScrollView>
+            crtHigh.setText("CRT HIGH: --");
+            crtLow.setText("CRT LOW: --");
+        });
+    }
+                }
